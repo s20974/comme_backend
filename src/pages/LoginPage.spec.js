@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render } from "@testing-library/react";
+import { fireEvent, render, waitForElementToBeRemoved } from "@testing-library/react";
 import { LoginPage } from "./LoginPage";
 
 describe('LoginPage', () => { 
@@ -19,6 +19,16 @@ describe('LoginPage', () => {
             }
         };
     };
+
+    const mockAsyncDelayed = () => {
+        return jest.fn().mockImplementation(() => {
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              resolve({});
+            }, 300);
+          });
+        });
+      };
 
     let usernameInput, passwordInput, button;
 
@@ -52,4 +62,21 @@ describe('LoginPage', () => {
             expect(() => fireEvent.click(button)).not.toThrow();
         })
      })
+
+     it('redirects to homePage after successful login', async () => {
+        const actions = {
+          postLogin: jest.fn().mockResolvedValue({}),
+        };
+        const history = {
+          push: jest.fn(),
+        };
+        const { queryByText } = setupForSubmit({ actions, history });
+        fireEvent.click(button);
+  
+        await waitForElementToBeRemoved(() => queryByText('Loading...'));
+  
+        expect(history.push).toHaveBeenCalledWith('/');
+      });
  })
+
+ console.error = () => {};

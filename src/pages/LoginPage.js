@@ -26,13 +26,21 @@ export class LoginPage extends React.Component{
             password: this.state.password
         }
         this.setState({pendingApiCall:true})
-        this.props.actions.postLogin(user).catch(
-            error => {
-                if(error.response){
-                    this.setState({errors: error.response.data.message})
-                }
-            }
-        );
+
+        this.props.actions.postLogin(user)
+                    .then((response) => {
+                        this.setState({pendingApiCall: false}, () => {
+                            this.props.history.push('/');
+                        });
+                    })
+                    .catch((error) => {
+                        if(error.response){
+                            this.setState({
+                                errors: error.response.data.message,
+                                pendingApiCall: false
+                            });
+                        }
+                    });
     }
 
     render(){
@@ -72,11 +80,13 @@ export class LoginPage extends React.Component{
                         </div>
                     )
                 }
+                <div className="text-center">
+                    <ButtonWithProgress onClick={this.onClickLogin} 
+                                        disabled={disableSubmit || this.state.pendingApiCall}
+                                        pendingApiCall={this.state.pendingApiCall}
+                                        text="Login"/>
+                </div>
 
-                <ButtonWithProgress onClick={this.onClickLogin} 
-                                    disabled={disableSubmit || this.state.pendingApiCall}
-                                    pendingApiCall={this.state.pendingApiCall}
-                                    text="Login"/>
             </div>
         )
     }
@@ -85,6 +95,9 @@ export class LoginPage extends React.Component{
 LoginPage.defaultProps = {
     actions: {
         postLogin: () => new Promise((resolve, reject) => resolve({}))
+    },     
+    history: {
+        push: () => {}
     }
 }
 
